@@ -12,7 +12,7 @@ DTYPE = "auto"                  # 精度自动：bf16 / fp16
 MAX_MODEL_LEN = 32768           # Qwen2.5 最大长度
 
 # 生成参数
-MAX_TOKENS = 2048
+MAX_TOKENS = 4096
 TEMPERATURE = 0.1
 TOP_P = 0.9
 PRESENCE_PENALTY = 0.0
