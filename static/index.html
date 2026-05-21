@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>苏州大学校园政策智能问答系统</title>
+    <!-- 引入Markdown解析和XSS防护库（CDN方式，无需本地安装） -->
+    <script src="https://cdn.jsdelivr.net/npm/marked@12.0.0/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.11/dist/purify.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -16,7 +19,7 @@
             padding: 20px;
         }
         .container {
-            max-width: 800px;
+            max-width: 850px;
             margin: 0 auto;
             background: white;
             border-radius: 12px;
@@ -79,10 +82,49 @@
             background-color: #f8f9fa;
             border-radius: 8px;
             min-height: 200px;
-            white-space: pre-wrap;
             font-size: 16px;
             color: #2c3e50;
-            line-height: 1.6;
+            line-height: 1.8;
+            white-space: normal; /* 改为normal，让Markdown自动换行 */
+        }
+        /* Markdown 样式优化（适配校园政策问答） */
+        .answer-area strong {
+            color: #e74c3c; /* 加粗文字用红色突出，适合政策重点 */
+            font-weight: 700;
+        }
+        .answer-area p {
+            margin-bottom: 12px;
+        }
+        .answer-area ul, .answer-area ol {
+            margin: 12px 0;
+            padding-left: 24px;
+        }
+        .answer-area li {
+            margin-bottom: 6px;
+        }
+        .answer-area table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 16px 0;
+            background: white;
+        }
+        .answer-area th, .answer-area td {
+            border: 1px solid #dee2e6;
+            padding: 8px 12px;
+            text-align: left;
+        }
+        .answer-area th {
+            background-color: #e9ecef;
+            font-weight: 600;
+        }
+        .answer-area blockquote {
+            border-left: 4px solid #3498db;
+            padding-left: 16px;
+            margin: 16px 0;
+            color: #6c757d;
+            background: #f0f8ff;
+            padding: 10px 16px;
+            border-radius: 0 4px 4px 0;
         }
         .loading {
             color: #3498db;
@@ -115,6 +157,14 @@
     </div>
 
     <script>
+        // 配置marked（关闭不需要的功能，提升安全性）
+        marked.setOptions({
+            breaks: true, // 支持换行符转换为<br>
+            gfm: true, // 支持GitHub Flavored Markdown
+            headerIds: false, // 禁用标题ID，防止XSS
+            mangle: false // 禁用邮箱混淆
+        });
+
         // 提交问题
         async function submitQuery() {
             const queryInput = document.getElementById("query-input");
@@ -146,7 +196,11 @@
                 const result = await response.json();
                 if (result.code === 200) {
                     answerArea.className = "answer-area";
-                    answerArea.textContent = result.data.answer;
+                    // 关键修改：先解析Markdown，再用DOMPurify净化XSS，最后渲染HTML
+                    const rawMarkdown = result.data.answer;
+                    const htmlContent = marked.parse(rawMarkdown);
+                    const safeHtml = DOMPurify.sanitize(htmlContent);
+                    answerArea.innerHTML = safeHtml;
                 } else {
                     answerArea.className = "answer-area error";
                     answerArea.textContent = `❌ 错误：${result.msg}`;
