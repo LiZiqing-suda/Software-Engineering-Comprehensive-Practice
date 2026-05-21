@@ -4,9 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>苏州大学校园政策智能问答系统</title>
-    <!-- 引入Markdown解析和XSS防护库（CDN方式，无需本地安装） -->
+    <!-- 1. 引入基础库 -->
     <script src="https://cdn.jsdelivr.net/npm/marked@12.0.0/marked.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.11/dist/purify.min.js"></script>
+    <!-- 2. 引入KaTeX公式渲染库（必须同时引入CSS和JS） -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+
     <style>
         * {
             margin: 0;
@@ -85,11 +90,11 @@
             font-size: 16px;
             color: #2c3e50;
             line-height: 1.8;
-            white-space: normal; /* 改为normal，让Markdown自动换行 */
+            white-space: normal;
         }
-        /* Markdown 样式优化（适配校园政策问答） */
+        /* Markdown 基础样式 */
         .answer-area strong {
-            color: #e74c3c; /* 加粗文字用红色突出，适合政策重点 */
+            color: #e74c3c;
             font-weight: 700;
         }
         .answer-area p {
@@ -126,6 +131,17 @@
             padding: 10px 16px;
             border-radius: 0 4px 4px 0;
         }
+        /* 公式样式优化 */
+        .katex {
+            font-size: 1.1em !important; /* 公式字号比正文稍大 */
+            margin: 0 2px;
+        }
+        .katex-display {
+            margin: 16px 0 !important; /* 块级公式上下间距 */
+            overflow-x: auto; /* 长公式横向滚动 */
+            overflow-y: hidden;
+            padding: 8px 0;
+        }
         .loading {
             color: #3498db;
             text-align: center;
@@ -157,13 +173,31 @@
     </div>
 
     <script>
-        // 配置marked（关闭不需要的功能，提升安全性）
+        // 配置marked
         marked.setOptions({
-            breaks: true, // 支持换行符转换为<br>
-            gfm: true, // 支持GitHub Flavored Markdown
-            headerIds: false, // 禁用标题ID，防止XSS
-            mangle: false // 禁用邮箱混淆
+            breaks: true,
+            gfm: true,
+            headerIds: false,
+            mangle: false
         });
+
+        // 配置DOMPurify白名单（允许KaTeX生成的标签和属性）
+        const purifyConfig = {
+            ADD_TAGS: ['span', 'svg', 'path', 'g', 'rect', 'text', 'mrow', 'mi', 'mn', 'mo', 'msup', 'mfrac', 'mtable', 'mtr', 'mtd', 'mtext'],
+            ADD_ATTR: ['class', 'style', 'xmlns', 'viewBox', 'd', 'fill', 'stroke', 'stroke-width', 'transform', 'font-family', 'font-size', 'font-style', 'font-weight', 'text-anchor', 'x', 'y', 'width', 'height']
+        };
+
+        // 配置KaTeX自动渲染规则
+        const katexConfig = {
+            delimiters: [
+                {left: "$$", right: "$$", display: true},
+                {left: "\[", right: "\]", display: true},  // 适配你截图中的块级公式格式
+                {left: "\(", right: "\)", display: false},
+                {left: "$", right: "$", display: false}
+            ],
+            throwOnError: false, // 公式错误时不抛出异常，显示原始文本
+            errorColor: "#e74c3c"
+        };
 
         // 提交问题
         async function submitQuery() {
@@ -184,7 +218,6 @@
             answerArea.textContent = "🔍 正在检索政策文档并生成回答...";
 
             try {
-                // 调用后端API
                 const response = await fetch("/api/qa", {
                     method: "POST",
                     headers: {
@@ -196,11 +229,19 @@
                 const result = await response.json();
                 if (result.code === 200) {
                     answerArea.className = "answer-area";
-                    // 关键修改：先解析Markdown，再用DOMPurify净化XSS，最后渲染HTML
                     const rawMarkdown = result.data.answer;
+                    
+                    // 1. 解析Markdown为HTML
                     const htmlContent = marked.parse(rawMarkdown);
-                    const safeHtml = DOMPurify.sanitize(htmlContent);
+                    
+                    // 2. XSS安全净化
+                    const safeHtml = DOMPurify.sanitize(htmlContent, purifyConfig);
+                    
+                    // 3. 渲染到页面
                     answerArea.innerHTML = safeHtml;
+                    
+                    // 4. 关键步骤：自动渲染页面中的所有LaTeX公式
+                    renderMathInElement(answerArea, katexConfig);
                 } else {
                     answerArea.className = "answer-area error";
                     answerArea.textContent = `❌ 错误：${result.msg}`;
@@ -209,13 +250,12 @@
                 answerArea.className = "answer-area error";
                 answerArea.textContent = `❌ 网络错误：${e.message}`;
             } finally {
-                // 恢复状态
                 submitBtn.disabled = false;
                 submitBtn.textContent = "提交问题";
             }
         }
 
-        // 回车提交（按住Ctrl+Enter）
+        // Ctrl+Enter快捷提交
         document.getElementById("query-input").addEventListener("keydown", function(e) {
             if (e.ctrlKey && e.key === "Enter") {
                 submitQuery();
