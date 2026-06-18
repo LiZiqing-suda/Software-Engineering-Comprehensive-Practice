@@ -1,10 +1,12 @@
 import os
 import sys
+import time
 import config
+from collections import defaultdict
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, JSONResponse
 import uvicorn
 from contextlib import asynccontextmanager
 from multiprocessing import freeze_support
@@ -20,13 +22,20 @@ from langchain_community.vectorstores import Chroma
 from langchain_community.embeddings import HuggingFaceEmbeddings
 
 # ======================== 全局配置 ========================
-BGE_LOCAL_PATH = "/data/gj/lzqrjgc/bge-small-zh-v1.5"
+BGE_LOCAL_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "bge-small-zh-v1.5")
 VECTOR_DB_PATH = "./vector_db_suda"
 TOP_K = 15
+
+# 限流配置
+RATE_LIMIT_MAX = 3       # 单IP每分钟最大请求数
+RATE_LIMIT_WINDOW = 60   # 时间窗口（秒）
 
 # 全局资源
 client = None        # DeepSeek 客户端
 vectordb = None
+
+# 限流记录：{ip: [timestamp, timestamp, ...]}
+_rate_limit_records = defaultdict(list)
 
 # ======================== 初始化函数 ========================
 def load_rag():
@@ -44,13 +53,8 @@ def load_rag():
 
 def get_context(vectordb, query):
     raw_docs = vectordb.similarity_search(query, k=TOP_K)
-    valid_docs = []
-    for doc in raw_docs:
-        content = doc.page_content.lower()
-        if any(k in content for k in ["绩点", "gpa", "成绩", "分数", "奖学金", "学位", "毕业", "推免", "参评"]):
-            valid_docs.append(doc)
     priority_docs, other_docs, graduate_docs = [], [], []
-    for doc in valid_docs:
+    for doc in raw_docs:
         source = doc.metadata["source"].lower()
         content = doc.page_content.lower()
         if "本科" in source or "本科生" in content:
@@ -62,11 +66,13 @@ def get_context(vectordb, query):
     sorted_docs = priority_docs + other_docs + graduate_docs
     seen = set()
     context_list = []
-    for doc in sorted_docs[:3]:
+    for doc in sorted_docs:
         key = doc.page_content[:200]
         if key not in seen:
             seen.add(key)
             context_list.append(f"【来源：{doc.metadata['source']}】\n{doc.page_content}")
+            if len(context_list) >= 3:
+                break
     return "\n\n".join(context_list)
 
 def answer(client, vectordb, q):
@@ -89,6 +95,25 @@ def answer(client, vectordb, q):
         extra_body={"thinking": {"type": "enabled"}}
     )
     return response.choices[0].message.content.strip()
+
+def check_rate_limit(ip: str) -> tuple[bool, int, int]:
+    """检查IP是否超过限流阈值。返回 (是否允许, 剩余次数, 重置剩余秒数)"""
+    now = time.time()
+    cutoff = now - RATE_LIMIT_WINDOW
+    # 清理过期记录
+    records = _rate_limit_records[ip]
+    while records and records[0] < cutoff:
+        records.pop(0)
+    # 清理空条目
+    if not records:
+        del _rate_limit_records[ip]
+        records = _rate_limit_records[ip]
+    count = len(records)
+    if count >= RATE_LIMIT_MAX:
+        reset_sec = int(records[0] + RATE_LIMIT_WINDOW - now) + 1
+        return False, 0, reset_sec
+    return True, RATE_LIMIT_MAX - count - 1, 0
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -142,13 +167,45 @@ async def qa(request: Request):
     global client, vectordb
     if client is None or vectordb is None:
         raise HTTPException(status_code=503, detail="系统正在初始化，请稍后再试")
+
+    # ===== 限流检查 =====
+    client_ip = request.client.host if request.client else "unknown"
+    allowed, remaining, reset_sec = check_rate_limit(client_ip)
+    if not allowed:
+        return JSONResponse(
+            status_code=429,
+            content={
+                "code": 429,
+                "data": {},
+                "msg": f"请求过于频繁，请 {reset_sec} 秒后再试（单IP每分钟最多 {RATE_LIMIT_MAX} 次）"
+            },
+            headers={
+                "X-RateLimit-Limit": str(RATE_LIMIT_MAX),
+                "X-RateLimit-Remaining": "0",
+                "X-RateLimit-Reset": str(int(time.time() + reset_sec)),
+                "Retry-After": str(reset_sec),
+            }
+        )
+
     try:
         data = await request.json()
         user_query = data.get("query", "").strip()
         if not user_query:
             raise HTTPException(status_code=400, detail="请输入有效的问题")
         result = answer(client, vectordb, user_query)
-        return {"code": 200, "data": {"answer": result}, "msg": "success"}
+        # 记录本次请求
+        _rate_limit_records[client_ip].append(time.time())
+        return JSONResponse(
+            status_code=200,
+            content={"code": 200, "data": {"answer": result}, "msg": "success"},
+            headers={
+                "X-RateLimit-Limit": str(RATE_LIMIT_MAX),
+                "X-RateLimit-Remaining": str(remaining),
+                "X-RateLimit-Reset": str(int(time.time() + RATE_LIMIT_WINDOW)),
+            }
+        )
+    except HTTPException:
+        raise
     except Exception as e:
         return {"code": 500, "data": {}, "msg": f"服务器错误：{str(e)}"}
 
