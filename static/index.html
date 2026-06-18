@@ -4,176 +4,542 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>苏州大学校园政策智能问答系统</title>
-    <!-- 1. 引入基础库 -->
+    <!-- 基础库 -->
     <script src="https://cdn.jsdelivr.net/npm/marked@12.0.0/marked.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.11/dist/purify.min.js"></script>
-    <!-- 2. 引入KaTeX公式渲染库（必须同时引入CSS和JS） -->
+    <!-- KaTeX 公式渲染 -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
     <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
 
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: "Microsoft YaHei", sans-serif;
+        :root {
+            --primary: #1a5276;
+            --primary-light: #2980b9;
+            --primary-lighter: #3498db;
+            --accent: #e67e22;
+            --bg: #f0f2f5;
+            --card-bg: #ffffff;
+            --text: #2c3e50;
+            --text-secondary: #5a6c7d;
+            --text-muted: #95a5a6;
+            --border: #e1e8ed;
+            --success: #27ae60;
+            --danger: #e74c3c;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+            --shadow: 0 4px 20px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.04);
+            --shadow-lg: 0 12px 40px rgba(0,0,0,0.12);
+            --radius: 16px;
+            --radius-sm: 10px;
+            --radius-xs: 6px;
+            --transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
         }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
         body {
-            background-color: #f5f7fa;
-            padding: 20px;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+            background: linear-gradient(135deg, #e8edf2 0%, #f0f2f5 30%, #f8f9fa 60%, #eef1f5 100%);
+            background-attachment: fixed;
+            min-height: 100vh;
+            color: var(--text);
+            line-height: 1.6;
         }
-        .container {
-            max-width: 850px;
+
+        /* ========== 顶部导航条 ========== */
+        .navbar {
+            background: linear-gradient(135deg, #0d3b5e 0%, #1a5276 40%, #1f5f8b 100%);
+            padding: 14px 0;
+            box-shadow: 0 2px 16px rgba(13, 59, 94, 0.25);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .navbar-inner {
+            max-width: 900px;
             margin: 0 auto;
-            background: white;
+            padding: 0 24px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+        .navbar-logo {
+            width: 42px;
+            height: 42px;
+            background: rgba(255,255,255,0.15);
             border-radius: 12px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            padding: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            flex-shrink: 0;
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255,255,255,0.2);
         }
-        .header {
+        .navbar-title {
+            color: #ffffff;
+            font-size: 18px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+        .navbar-subtitle {
+            color: rgba(255,255,255,0.7);
+            font-size: 12px;
+            font-weight: 400;
+        }
+
+        /* ========== 主容器 ========== */
+        .main-container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 28px 24px 40px;
+        }
+
+        /* ========== 欢迎横幅 ========== */
+        .hero {
+            background: linear-gradient(135deg, #ffffff 0%, #fafbfc 100%);
+            border-radius: var(--radius);
+            padding: 36px 40px;
+            margin-bottom: 24px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
             text-align: center;
-            margin-bottom: 30px;
         }
-        .header h1 {
-            color: #2c3e50;
-            font-size: 28px;
-            margin-bottom: 10px;
+        .hero-icon {
+            width: 64px;
+            height: 64px;
+            background: linear-gradient(135deg, #eaf2f8 0%, #d4e6f1 100%);
+            border-radius: 20px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            margin-bottom: 16px;
         }
-        .header p {
-            color: #7f8c8d;
+        .hero h1 {
+            font-size: 26px;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 8px;
+            letter-spacing: 0.3px;
+        }
+        .hero p {
+            color: var(--text-secondary);
             font-size: 14px;
+            max-width: 500px;
+            margin: 0 auto;
         }
-        .input-area {
-            margin-bottom: 20px;
+        .hero .badge {
+            display: inline-block;
+            margin-top: 14px;
+            padding: 5px 14px;
+            background: #fef9f3;
+            color: var(--accent);
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+            border: 1px solid #fdebd0;
+        }
+
+        /* ========== 快捷问题 ========== */
+        .quick-questions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 24px;
+            justify-content: center;
+        }
+        .quick-chip {
+            padding: 9px 18px;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            font-size: 13px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: var(--transition);
+            white-space: nowrap;
+            user-select: none;
+        }
+        .quick-chip:hover {
+            border-color: var(--primary-lighter);
+            color: var(--primary-light);
+            background: #f0f7fd;
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-sm);
+        }
+        .quick-chip:active {
+            transform: scale(0.97);
+        }
+
+        /* ========== 输入卡片 ========== */
+        .input-card {
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            padding: 24px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+            margin-bottom: 24px;
+        }
+        .input-wrapper {
+            position: relative;
         }
         #query-input {
             width: 100%;
-            height: 100px;
-            padding: 15px;
-            border: 1px solid #e6e6e6;
-            border-radius: 8px;
-            resize: none;
-            font-size: 16px;
+            min-height: 110px;
+            padding: 16px 18px;
+            border: 2px solid var(--border);
+            border-radius: var(--radius-sm);
+            resize: vertical;
+            font-size: 15px;
+            font-family: inherit;
+            color: var(--text);
             outline: none;
-            transition: border-color 0.3s;
+            transition: var(--transition);
+            background: #fafbfc;
+            line-height: 1.7;
         }
         #query-input:focus {
-            border-color: #3498db;
+            border-color: var(--primary-lighter);
+            background: #ffffff;
+            box-shadow: 0 0 0 4px rgba(52, 152, 219, 0.08);
         }
-        .btn-area {
-            text-align: center;
-            margin-bottom: 30px;
+        #query-input::placeholder {
+            color: var(--text-muted);
+        }
+        .input-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 14px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .char-hint {
+            font-size: 12px;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .char-hint kbd {
+            display: inline-block;
+            padding: 2px 7px;
+            background: #eef1f5;
+            border: 1px solid #d5dce3;
+            border-radius: 4px;
+            font-size: 11px;
+            font-family: inherit;
         }
         #submit-btn {
-            padding: 12px 40px;
-            background-color: #3498db;
+            padding: 12px 36px;
+            background: linear-gradient(135deg, var(--primary-light) 0%, var(--primary-lighter) 100%);
             color: white;
             border: none;
-            border-radius: 8px;
-            font-size: 16px;
+            border-radius: var(--radius-xs);
+            font-size: 15px;
+            font-weight: 600;
             cursor: pointer;
-            transition: background-color 0.3s;
+            transition: var(--transition);
+            letter-spacing: 0.3px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 2px 8px rgba(41, 128, 185, 0.3);
         }
         #submit-btn:hover {
-            background-color: #2980b9;
+            background: linear-gradient(135deg, #2471a3 0%, #2e86c1 100%);
+            box-shadow: 0 4px 16px rgba(41, 128, 185, 0.4);
+            transform: translateY(-1px);
+        }
+        #submit-btn:active {
+            transform: scale(0.98);
         }
         #submit-btn:disabled {
-            background-color: #bdc3c7;
+            background: #bdc3c7;
+            box-shadow: none;
             cursor: not-allowed;
+            transform: none;
         }
-        .answer-area {
-            padding: 20px;
-            background-color: #f8f9fa;
-            border-radius: 8px;
+        .btn-icon {
+            font-size: 18px;
+        }
+
+        /* ========== 答案区域 ========== */
+        .answer-card {
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+            overflow: hidden;
+        }
+        .answer-header {
+            padding: 16px 24px;
+            background: #fafbfc;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .answer-header-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--success);
+            flex-shrink: 0;
+        }
+        .answer-header-dot.loading-dot {
+            background: var(--accent);
+            animation: pulse 1s ease-in-out infinite;
+        }
+        .answer-header-text {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            letter-spacing: 0.3px;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        .answer-body {
+            padding: 28px 30px;
+            min-height: 180px;
+            font-size: 15px;
+            line-height: 1.9;
+            color: var(--text);
+        }
+        .answer-placeholder {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
             min-height: 200px;
-            font-size: 16px;
-            color: #2c3e50;
-            line-height: 1.8;
-            white-space: normal;
+            color: var(--text-muted);
+            text-align: center;
+            gap: 12px;
         }
-        /* Markdown 基础样式 */
-        .answer-area strong {
-            color: #e74c3c;
+        .answer-placeholder-icon {
+            font-size: 48px;
+            opacity: 0.6;
+        }
+        .answer-placeholder p {
+            font-size: 14px;
+            max-width: 360px;
+        }
+
+        /* ========== Markdown 富文本样式 ========== */
+        .answer-body h1, .answer-body h2, .answer-body h3 {
+            color: var(--primary);
+            margin: 20px 0 10px;
+            font-weight: 600;
+        }
+        .answer-body h1 { font-size: 1.4em; border-bottom: 2px solid #eaf2f8; padding-bottom: 8px; }
+        .answer-body h2 { font-size: 1.2em; }
+        .answer-body h3 { font-size: 1.05em; }
+        .answer-body p { margin-bottom: 12px; }
+        .answer-body strong {
+            color: #c0392b;
             font-weight: 700;
         }
-        .answer-area p {
-            margin-bottom: 12px;
-        }
-        .answer-area ul, .answer-area ol {
+        .answer-body ul, .answer-body ol {
             margin: 12px 0;
             padding-left: 24px;
         }
-        .answer-area li {
-            margin-bottom: 6px;
-        }
-        .answer-area table {
+        .answer-body li { margin-bottom: 6px; }
+        .answer-body li::marker { color: var(--primary-lighter); }
+        .answer-body table {
             width: 100%;
             border-collapse: collapse;
             margin: 16px 0;
-            background: white;
+            font-size: 14px;
+            border-radius: var(--radius-xs);
+            overflow: hidden;
+            box-shadow: 0 0 0 1px var(--border);
         }
-        .answer-area th, .answer-area td {
-            border: 1px solid #dee2e6;
-            padding: 8px 12px;
+        .answer-body th, .answer-body td {
+            border: 1px solid #e9ecef;
+            padding: 10px 14px;
             text-align: left;
         }
-        .answer-area th {
-            background-color: #e9ecef;
+        .answer-body th {
+            background: #f0f4f8;
             font-weight: 600;
+            color: var(--primary);
         }
-        .answer-area blockquote {
-            border-left: 4px solid #3498db;
-            padding-left: 16px;
+        .answer-body tr:nth-child(even) td {
+            background: #fafbfc;
+        }
+        .answer-body blockquote {
+            border-left: 4px solid var(--primary-lighter);
+            padding: 12px 18px;
             margin: 16px 0;
-            color: #6c757d;
-            background: #f0f8ff;
-            padding: 10px 16px;
-            border-radius: 0 4px 4px 0;
+            color: #5a6c7d;
+            background: #f5f9fc;
+            border-radius: 0 var(--radius-xs) var(--radius-xs) 0;
+            font-style: italic;
         }
-        /* 公式样式优化 */
-        .katex {
-            font-size: 1.1em !important; /* 公式字号比正文稍大 */
-            margin: 0 2px;
+        .answer-body code {
+            background: #f0f3f6;
+            padding: 2px 7px;
+            border-radius: 4px;
+            font-size: 0.9em;
+            color: #e74c3c;
+            font-family: "SF Mono", "Fira Code", "Consolas", monospace;
         }
+        .answer-body pre {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 18px 20px;
+            border-radius: var(--radius-xs);
+            overflow-x: auto;
+            margin: 16px 0;
+            line-height: 1.6;
+        }
+        .answer-body pre code {
+            background: transparent;
+            color: inherit;
+            padding: 0;
+            font-size: 13px;
+        }
+        .answer-body hr {
+            border: none;
+            border-top: 1px solid var(--border);
+            margin: 20px 0;
+        }
+        .answer-body a {
+            color: var(--primary-lighter);
+            text-decoration: underline;
+            text-underline-offset: 3px;
+        }
+
+        /* ========== KaTeX 公式样式 ========== */
+        .katex { font-size: 1.1em !important; margin: 0 2px; }
         .katex-display {
-            margin: 16px 0 !important; /* 块级公式上下间距 */
-            overflow-x: auto; /* 长公式横向滚动 */
+            margin: 18px 0 !important;
+            overflow-x: auto;
             overflow-y: hidden;
-            padding: 8px 0;
+            padding: 10px 0;
         }
-        .loading {
-            color: #3498db;
+
+        /* ========== 加载动画 ========== */
+        .loading-dots {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 40px 0;
+            justify-content: center;
+        }
+        .loading-dots span {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--primary-lighter);
+            animation: bounce 1.2s ease-in-out infinite;
+        }
+        .loading-dots span:nth-child(2) { animation-delay: 0.15s; }
+        .loading-dots span:nth-child(3) { animation-delay: 0.3s; }
+        @keyframes bounce {
+            0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
+            40% { transform: scale(1); opacity: 1; }
+        }
+
+        /* ========== 页脚 ========== */
+        .footer {
             text-align: center;
             padding: 20px;
+            color: var(--text-muted);
+            font-size: 12px;
         }
-        .error {
-            color: #e74c3c;
+
+        /* ========== 响应式 ========== */
+        @media (max-width: 640px) {
+            .hero { padding: 24px 20px; }
+            .hero h1 { font-size: 20px; }
+            .input-card { padding: 16px; }
+            .answer-body { padding: 20px 16px; }
+            .input-footer { flex-direction: column; align-items: stretch; }
+            #submit-btn { justify-content: center; width: 100%; }
+            .navbar-title { font-size: 15px; }
+            .quick-chip { font-size: 12px; padding: 7px 14px; }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>苏州大学校园政策智能问答系统</h1>
-            <p>专注于绩点、成绩、奖学金、学位等校园政策解答 | 由AI生成，仅供参考</p>
+
+    <!-- 顶部导航条 -->
+    <nav class="navbar">
+        <div class="navbar-inner">
+            <div class="navbar-logo">🏛️</div>
+            <div>
+                <div class="navbar-title">苏州大学 · 校园政策智能问答</div>
+                <div class="navbar-subtitle">Soochow University · AI-Powered Policy Q&A</div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 主容器 -->
+    <div class="main-container">
+
+        <!-- 欢迎横幅 -->
+        <section class="hero">
+            <div class="hero-icon">🎓</div>
+            <h1>校园政策智能问答系统</h1>
+            <p>专注于绩点计算、成绩评定、奖学金、学位授予等校园政策解答，基于官方文档生成回答</p>
+            <div class="badge">⚠️ 由AI生成，仅供参考，请仔细甄别</div>
+        </section>
+
+        <!-- 快捷问题 -->
+        <div class="quick-questions">
+            <span class="quick-chip" data-query="本科生绩点怎么计算？">📊 本科生绩点计算</span>
+            <span class="quick-chip" data-query="绩点如何计算？">📊 绩点如何计算</span>
+            <span class="quick-chip" data-query="学位授予有哪些条件？">🎓 学位授予条件</span>
+            <span class="quick-chip" data-query="本科生奖学金多少钱？">💰 本科生奖学金多少钱</span>
+            <span class="quick-chip" data-query="转专业有什么要求？">🔄 转专业要求</span>
+            <span class="quick-chip" data-query="课程免修怎么申请？">📋 课程免修申请</span>
         </div>
 
-        <div class="input-area">
-            <textarea id="query-input" placeholder="请输入你的问题（例如：本科生绩点怎么计算？研究生奖学金评定标准？）"></textarea>
+        <!-- 输入卡片 -->
+        <div class="input-card">
+            <div class="input-wrapper">
+                <textarea
+                    id="query-input"
+                    placeholder="请输入你的校园政策问题，例如：三年级本科生绩点3.5分对应的百分制成绩是多少？"
+                    maxlength="500"
+                ></textarea>
+            </div>
+            <div class="input-footer">
+                <div class="char-hint">
+                    按 <kbd>Ctrl</kbd> + <kbd>Enter</kbd> 快捷发送
+                </div>
+                <button id="submit-btn" onclick="submitQuery()">
+                    <span class="btn-icon">✉️</span> 提交问题
+                </button>
+            </div>
         </div>
 
-        <div class="btn-area">
-            <button id="submit-btn" onclick="submitQuery()">提交问题</button>
+        <!-- 答案卡片 -->
+        <div class="answer-card">
+            <div class="answer-header">
+                <div class="answer-header-dot" id="status-dot"></div>
+                <span class="answer-header-text" id="status-text">就绪</span>
+            </div>
+            <div class="answer-body" id="answer-body">
+                <div class="answer-placeholder">
+                    <div class="answer-placeholder-icon">💬</div>
+                    <p>输入问题并点击提交，系统将为你检索相关政策文档并生成回答</p>
+                </div>
+            </div>
         </div>
 
-        <div class="answer-area" id="answer-area">
-            请输入问题并点击提交，系统将为你解答苏州大学校园政策相关问题
+        <!-- 页脚 -->
+        <div class="footer">
+            苏州大学校园政策智能问答系统 · 回答内容由AI生成，不保证准确性，仅供参考
         </div>
     </div>
 
     <script>
-        // 配置marked
+        // ========== 配置 ==========
         marked.setOptions({
             breaks: true,
             gfm: true,
@@ -181,86 +547,197 @@
             mangle: false
         });
 
-        // 配置DOMPurify白名单（允许KaTeX生成的标签和属性）
         const purifyConfig = {
-            ADD_TAGS: ['span', 'svg', 'path', 'g', 'rect', 'text', 'mrow', 'mi', 'mn', 'mo', 'msup', 'mfrac', 'mtable', 'mtr', 'mtd', 'mtext'],
-            ADD_ATTR: ['class', 'style', 'xmlns', 'viewBox', 'd', 'fill', 'stroke', 'stroke-width', 'transform', 'font-family', 'font-size', 'font-style', 'font-weight', 'text-anchor', 'x', 'y', 'width', 'height']
+            ADD_TAGS: ['span', 'svg', 'path', 'g', 'rect', 'text', 'mrow', 'mi', 'mn', 'mo', 'msup', 'mfrac', 'mtable', 'mtr', 'mtd', 'mtext', 'annotation'],
+            ADD_ATTR: ['class', 'style', 'xmlns', 'viewBox', 'd', 'fill', 'stroke', 'stroke-width', 'transform', 'font-family', 'font-size', 'font-style', 'font-weight', 'text-anchor', 'x', 'y', 'width', 'height', 'data-markdown', 'data-canonical', 'aria-hidden']
         };
 
-        // 配置KaTeX自动渲染规则
-        const katexConfig = {
-            delimiters: [
-                {left: "$$", right: "$$", display: true},
-                {left: "\[", right: "\]", display: true},  // 适配你截图中的块级公式格式
-                {left: "\(", right: "\)", display: false},
-                {left: "$", right: "$", display: false}
-            ],
-            throwOnError: false, // 公式错误时不抛出异常，显示原始文本
-            errorColor: "#e74c3c"
-        };
+        const statusDot = document.getElementById("status-dot");
+        const statusText = document.getElementById("status-text");
+        const answerBody = document.getElementById("answer-body");
 
-        // 提交问题
-        async function submitQuery() {
+        function setStatus(state) {
+            statusDot.className = "answer-header-dot";
+            switch (state) {
+                case "loading":
+                    statusDot.classList.add("loading-dot");
+                    statusText.textContent = "正在检索并生成回答...";
+                    break;
+                case "success":
+                    statusText.textContent = "回答完成";
+                    break;
+                case "error":
+                    statusDot.style.background = "var(--danger)";
+                    statusText.textContent = "请求出错";
+                    break;
+                default:
+                    statusText.textContent = "就绪";
+            }
+        }
+
+        // ========== LaTeX 保护 + Markdown 渲染 ==========
+        // 核心思路：在 Markdown 解析前用占位符替换所有 LaTeX 公式，
+        // 避免 _、*、^ 等被 marked 误解析，Markdown 转 HTML 后再用 KaTeX 渲染替换占位符
+        function renderMarkdownWithLatex(rawText) {
+            const latexBlocks = [];
+
+            // 1. 保护块级公式：$$...$$ 和 \[...\]
+            let text = rawText.replace(/\$\$([\s\S]*?)\$\$/g, (_, f) => {
+                latexBlocks.push({ formula: f.trim(), display: true });
+                return `\n@@LATEX_${latexBlocks.length - 1}@@\n`;
+            });
+            text = text.replace(/\\\[([\s\S]*?)\\\]/g, (_, f) => {
+                latexBlocks.push({ formula: f.trim(), display: true });
+                return `\n@@LATEX_${latexBlocks.length - 1}@@\n`;
+            });
+
+            // 2. 保护行内公式：$...$ 和 \(...\)
+            text = text.replace(/\$([^\$\n]+?)\$/g, (_, f) => {
+                latexBlocks.push({ formula: f.trim(), display: false });
+                return `@@LATEX_${latexBlocks.length - 1}@@`;
+            });
+            text = text.replace(/\\\(([\s\S]*?)\\\)/g, (_, f) => {
+                latexBlocks.push({ formula: f.trim(), display: false });
+                return `@@LATEX_${latexBlocks.length - 1}@@`;
+            });
+
+            // 3. Markdown → HTML
+            let html = marked.parse(text);
+
+            // 4. XSS 净化
+            html = DOMPurify.sanitize(html, purifyConfig);
+
+            // 5. 占位符替换为 KaTeX 渲染结果
+            html = html.replace(/@@LATEX_(\d+)@@/g, (_, id) => {
+                const lb = latexBlocks[parseInt(id)];
+                if (!lb) return '';
+                try {
+                    return katex.renderToString(lb.formula, {
+                        displayMode: lb.display,
+                        throwOnError: false,
+                        errorColor: '#e74c3c',
+                        strict: false
+                    });
+                } catch (e) {
+                    return lb.display
+                        ? `<pre style="color:#e74c3c;background:#fdf0ef;padding:8px;border-radius:4px;">公式渲染失败: ${escapeHtml(lb.formula)}</pre>`
+                        : `<code style="color:#e74c3c;">${escapeHtml(lb.formula)}</code>`;
+                }
+            });
+
+            return html;
+        }
+
+        // ========== 提交问题 ==========
+        async function submitQuery(queryText) {
             const queryInput = document.getElementById("query-input");
             const submitBtn = document.getElementById("submit-btn");
-            const answerArea = document.getElementById("answer-area");
-            
-            const query = queryInput.value.trim();
+
+            const query = queryText || queryInput.value.trim();
             if (!query) {
-                alert("请输入有效的问题！");
+                shakeElement(queryInput);
                 return;
             }
 
             // 状态切换
             submitBtn.disabled = true;
-            submitBtn.textContent = "正在解答...";
-            answerArea.className = "answer-area loading";
-            answerArea.textContent = "🔍 正在检索政策文档并生成回答...";
+            submitBtn.innerHTML = '<span class="btn-icon">⏳</span> 正在解答...';
+            setStatus("loading");
+            answerBody.innerHTML = `
+                <div class="loading-dots">
+                    <span></span><span></span><span></span>
+                </div>
+                <p style="text-align:center;color:var(--text-muted);font-size:13px;">🔍 正在检索政策文档并生成回答...</p>
+            `;
 
             try {
                 const response = await fetch("/api/qa", {
                     method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
+                    headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ query: query }),
                 });
 
                 const result = await response.json();
                 if (result.code === 200) {
-                    answerArea.className = "answer-area";
-                    const rawMarkdown = result.data.answer;
-                    
-                    // 1. 解析Markdown为HTML
-                    const htmlContent = marked.parse(rawMarkdown);
-                    
-                    // 2. XSS安全净化
-                    const safeHtml = DOMPurify.sanitize(htmlContent, purifyConfig);
-                    
-                    // 3. 渲染到页面
-                    answerArea.innerHTML = safeHtml;
-                    
-                    // 4. 关键步骤：自动渲染页面中的所有LaTeX公式
-                    renderMathInElement(answerArea, katexConfig);
+                    setStatus("success");
+                    answerBody.innerHTML = renderMarkdownWithLatex(result.data.answer);
+                } else if (result.code === 429) {
+                    // 触发限流
+                    const retryAfter = response.headers.get("Retry-After") || "?";
+                    setStatus("error");
+                    answerBody.innerHTML = `
+                        <div class="answer-placeholder">
+                            <div class="answer-placeholder-icon" style="font-size:48px;">🚫</div>
+                            <p style="color:var(--danger);font-weight:600;">访问过于频繁</p>
+                            <p style="color:var(--text-muted);font-size:13px;">${escapeHtml(result.msg)}</p>
+                        </div>
+                    `;
                 } else {
-                    answerArea.className = "answer-area error";
-                    answerArea.textContent = `❌ 错误：${result.msg}`;
+                    setStatus("error");
+                    answerBody.innerHTML = `
+                        <div class="answer-placeholder">
+                            <div class="answer-placeholder-icon" style="font-size:48px;">⚠️</div>
+                            <p style="color:var(--danger);">${escapeHtml(result.msg)}</p>
+                        </div>
+                    `;
                 }
             } catch (e) {
-                answerArea.className = "answer-area error";
-                answerArea.textContent = `❌ 网络错误：${e.message}`;
+                setStatus("error");
+                answerBody.innerHTML = `
+                    <div class="answer-placeholder">
+                        <div class="answer-placeholder-icon" style="font-size:48px;">🔌</div>
+                        <p style="color:var(--danger);">网络连接失败：${escapeHtml(e.message)}</p>
+                    </div>
+                `;
             } finally {
                 submitBtn.disabled = false;
-                submitBtn.textContent = "提交问题";
+                submitBtn.innerHTML = '<span class="btn-icon">✉️</span> 提交问题';
             }
         }
 
-        // Ctrl+Enter快捷提交
+        // ========== 快捷问题点击 ==========
+        document.querySelectorAll(".quick-chip").forEach(chip => {
+            chip.addEventListener("click", function() {
+                const query = this.getAttribute("data-query");
+                document.getElementById("query-input").value = query;
+                document.getElementById("query-input").focus();
+                submitQuery(query);
+            });
+        });
+
+        // ========== 快捷键 ==========
         document.getElementById("query-input").addEventListener("keydown", function(e) {
             if (e.ctrlKey && e.key === "Enter") {
+                e.preventDefault();
                 submitQuery();
             }
         });
+
+        // ========== 工具函数 ==========
+        function escapeHtml(text) {
+            const div = document.createElement("div");
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function shakeElement(el) {
+            el.style.animation = "none";
+            el.offsetHeight; // trigger reflow
+            el.style.animation = "shake 0.4s ease";
+            setTimeout(() => { el.style.animation = ""; }, 400);
+        }
+
+        // 抖动动画
+        const shakeStyle = document.createElement("style");
+        shakeStyle.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-6px); }
+                50% { transform: translateX(6px); }
+                75% { transform: translateX(-4px); }
+            }
+        `;
+        document.head.appendChild(shakeStyle);
     </script>
 </body>
 </html>
