@@ -1,7 +1,7 @@
 # ========================
 # DeepSeek API 配置
 # ========================
-DEEPSEEK_API_KEY = "API_KEY"
+DEEPSEEK_API_KEY = ""
 DEEPSEEK_BASE_URL = "https://api.deepseek.com"
 DEEPSEEK_MODEL = "deepseek-v4-flash"
 
