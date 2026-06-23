@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>苏州大学校园政策智能问答系统</title>
+
+    <!-- 样式表 -->
+    <link rel="stylesheet" href="/static/css/style.css">
+
+    <!-- 基础库（本地托管，避免国内网络下 CDN 加载失败导致页面无响应） -->
+    <script src="/static/js/lib/marked.min.js"></script>
+    <script src="/static/js/lib/purify.min.js"></script>
+
+    <!-- KaTeX 公式渲染（JS 本地托管，CSS 仍走 CDN，加载失败不影响核心功能） -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <script src="/static/js/lib/katex.min.js"></script>
+</head>
+<body>
+
+    <!-- ========== 顶部导航条 ========== -->
+    <nav class="navbar">
+        <div class="navbar-inner">
+            <div class="navbar-logo">🏛️</div>
+            <div>
+                <div class="navbar-title">苏州大学 · 校园政策智能问答</div>
+                <div class="navbar-subtitle">Soochow University · AI-Powered Policy Q&A</div>
+            </div>
+            <div class="navbar-actions">
+                <button class="nav-btn" id="btn-theme" title="切换暗色模式">🌙</button>
+                <button class="nav-btn" id="btn-new-chat" title="开始新对话">＋ 新对话</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- ========== 主容器 ========== -->
+    <div class="main-container">
+
+        <!-- 欢迎横幅 -->
+        <section class="hero">
+            <div class="hero-icon">🎓</div>
+            <h1>校园政策智能问答系统</h1>
+            <p>专注于绩点计算、成绩评定、奖学金、学位授予等校园政策解答，基于官方文档生成回答。支持流式输出与多轮对话。</p>
+            <div class="badge">⚠️ 由AI生成，仅供参考，请仔细甄别</div>
+        </section>
+
+        <!-- 快捷问题 -->
+        <div class="quick-questions">
+            <span class="quick-chip" role="button" tabindex="0" data-query="本科生绩点怎么计算？">📊 本科生绩点计算</span>
+            <span class="quick-chip" role="button" tabindex="0" data-query="绩点如何计算？">📊 绩点如何计算</span>
+            <span class="quick-chip" role="button" tabindex="0" data-query="学位授予有哪些条件？">🎓 学位授予条件</span>
+            <span class="quick-chip" role="button" tabindex="0" data-query="本科生奖学金多少钱？">💰 本科生奖学金多少钱</span>
+            <span class="quick-chip" role="button" tabindex="0" data-query="转专业有什么要求？">🔄 转专业要求</span>
+            <span class="quick-chip" role="button" tabindex="0" data-query="课程免修怎么申请？">📋 课程免修申请</span>
+        </div>
+
+        <!-- ===== 对话区域 ===== -->
+        <div class="chat-container">
+            <div class="chat-header">
+                <div class="chat-header-dot" id="status-dot"></div>
+                <span class="chat-header-text" id="status-text">就绪</span>
+                <div class="chat-header-actions">
+                    <button id="btn-clear-chat" title="清空当前对话">清空屏幕</button>
+                </div>
+            </div>
+            <div class="chat-messages" id="chat-messages">
+                <div class="chat-empty">
+                    <div class="chat-empty-icon">💬</div>
+                    <p>输入问题并点击提交，系统将为你检索相关政策文档并生成回答</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== 输入卡片 ===== -->
+        <div class="input-card">
+            <div class="input-wrapper">
+                <textarea
+                    id="query-input"
+                    placeholder="请输入你的校园政策问题，例如：三年级本科生绩点3.5分对应的百分制成绩是多少？"
+                    maxlength="500"
+                ></textarea>
+            </div>
+            <div class="input-footer">
+                <div class="char-hint">
+                    按 <kbd>Ctrl</kbd> + <kbd>Enter</kbd> 快捷发送
+                </div>
+                <button id="submit-btn">
+                    <span class="btn-icon">✉️</span> 提交问题
+                </button>
+            </div>
+        </div>
+
+        <!-- 页脚 -->
+        <div class="footer">
+            苏州大学校园政策智能问答系统 v2.0 · 回答内容由AI生成，不保证准确性，仅供参考
+        </div>
+    </div>
+
+    <!-- 应用逻辑（普通脚本，兼容所有手机浏览器） -->
+    <script src="/static/js/app-bundle.js"></script>
+</body>
+</html>
