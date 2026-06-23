@@ -1,0 +1,26 @@
+[project]
+name = "suda-policy-qa"
+version = "2.0.0"
+description = "苏州大学校园政策智能问答系统 — 基于 RAG 架构的政策问答助手"
+requires-python = ">=3.10"
+dependencies = [
+    "fastapi>=0.109.0",
+    "uvicorn[standard]>=0.27.0",
+    "python-dotenv>=1.0.0",
+    "openai>=1.12.0",
+    "chromadb>=0.4.22",
+    "langchain-community>=0.2.0",
+    "sentence-transformers>=2.2.0",
+    "tenacity>=8.2.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-asyncio>=0.23.0",
+    "httpx>=0.26.0",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
